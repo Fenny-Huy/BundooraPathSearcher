@@ -57,10 +57,10 @@ def main():
         total_dist += dist_map.get((u, v), 0.0)
 
     # 6) Print results
-    print("\n🛣️ Optimal route:")
+    print("\n Optimal route:")
     print("   " + " → ".join(path))
-    print(f"\n📏 Total distance: {total_dist:.2f} km")
-    print(f"⏱️ Total travel time: {total_time:.1f} minutes")
+    print(f"\n Total distance: {total_dist:.2f} km")
+    print(f" Total travel time: {total_time:.1f} minutes")
 
 if __name__ == "__main__":
     main()
