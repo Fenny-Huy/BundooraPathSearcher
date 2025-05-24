@@ -55,7 +55,7 @@ with tab_paths:
     # Sidebar controls
     if st.sidebar.button("Show paths", key="show_paths"):
         # compute graph & paths
-        with st.spinner("Building graph & predicting…"):
+        with st.spinner("Building graph…"):
             ts_df = load_timeseries()
             source = start_sel.split("⎯")[0].strip()
             target = end_sel.split("⎯")[0].strip()
@@ -73,23 +73,26 @@ with tab_paths:
             st.session_state.highlight = choices[0]
         default_idx = 2 if len(choices) > 1 else 1
 
-        st.markdown("##### Display Controls")
-        # st.subheader("Display Controls")
+        # st.markdown("##### Display Controls")
 
-        if len(choices) == 1:
-            disp_opt = st.radio(
-                "Nodes to display:",
-                ["All nodes", "Highlighted path nodes"],
-                index=default_idx-1,
-                key="disp_opt"
-            )
+        # if len(choices) == 1:
+        #     disp_opt = st.radio(
+        #         "Nodes to display:",
+        #         ["All nodes", "Highlighted path nodes"],
+        #         index=default_idx-1,
+        #         key="disp_opt"
+        #     )
+        # else:
+        #     disp_opt = st.radio(
+        #         "Nodes to display:",
+        #         ["All nodes", "All path nodes", "Highlighted path nodes"],
+        #         index=default_idx,
+        #         key="disp_opt"
+        #     )
+        if len(choices)==1:
+            disp_opt = st.sidebar.radio("Nodes to display:", ["All nodes","Highlighted path nodes"], index=default_idx-1)
         else:
-            disp_opt = st.radio(
-                "Nodes to display:",
-                ["All nodes", "All path nodes", "Highlighted path nodes"],
-                index=default_idx,
-                key="disp_opt"
-            )
+            disp_opt = st.sidebar.radio("Nodes to display:", ["All nodes","All path nodes","Highlighted path nodes"], index=default_idx)
 
         hi = st.session_state.get("highlight_idx", 0)
 
@@ -101,36 +104,16 @@ with tab_paths:
         else:
             show_nodes = paths[hi][0]
 
-        st.markdown("##### Select and highlight a path")
-        for idx, (nodes, t, d) in enumerate(paths):
-        # build label & styling
-            color = PALETTE[idx % len(PALETTE)]
-            label = f"{idx+1}. {t:.1f}m, {d:.2f}km → {' → '.join(nodes)}"
-            if idx == hi:
-                styled = (
-                    f"<span style='color:{color}; "
-                    f"font-weight:bold; text-decoration:underline'>{label}</span>"
-                )
-            else:
-                styled = f"<span style='color:{color}'>{label}</span>"
-
-            # make two columns: 1 for the button, 9 for the text
-            col_btn, col_txt = st.columns([1, 9])
-            with col_btn:
-                if st.button("Select", key=f"btn_{idx}"):
-                    st.session_state.highlight_idx = idx
-                    hi = idx
-            with col_txt:
-                st.markdown(styled, unsafe_allow_html=True)
-
         # Base map
         lat0, lon0 = G.nodes[start_sel.split("⎯")[0].strip()]['pos']
         m = folium.Map(location=[lat0, lon0], zoom_start=13)
-        # Node markers
+        # Node markers with wider popups for better visibility
         for nid in show_nodes:
             lat, lon = G.nodes[nid]['pos']
             loc = nodes_df.loc[nodes_df.Site_ID == nid, 'Location'].iat[0]
-            folium.Marker((lat, lon), popup=f"Node {nid}, {loc}", icon=folium.Icon(color='gray')).add_to(m)
+            popup = folium.Popup(f"SCATS ID: {nid}, {loc}, {lat:.6f}, {lon:.6f}", max_width=150)
+            marker = folium.Marker((lat, lon), popup=popup, icon=folium.Icon(color='gray'))
+            marker.add_to(m)
         # Draw routes
         all_coords = []
         for idx,(ns,t,d) in enumerate(paths):
@@ -147,6 +130,28 @@ with tab_paths:
             m.fit_bounds([[min(lats),min(lons)],[max(lats),max(lons)]])
 
         st_folium(m, width=800, height=500)
+
+        st.markdown("##### Select and highlight a path")
+        for idx, (nodes, t, d) in enumerate(paths):
+        # build label & styling
+            color = PALETTE[idx % len(PALETTE)]
+            label = f"{idx+1}. {t:.1f}m, {d:.2f}km: {' → '.join(nodes)}"
+            if idx == hi:
+                styled = (
+                    f"<span style='color:{color}; "
+                    f"font-weight:bold; text-decoration:underline'>{label}</span>"
+                )
+            else:
+                styled = f"<span style='color:{color}'>{label}</span>"
+
+            # make two columns: 1 for the button, 9 for the text
+            col_btn, col_txt = st.columns([1, 9])
+            with col_btn:
+                if st.button("Select", key=f"btn_{idx}"):
+                    st.session_state.highlight_idx = idx
+                    hi = idx
+            with col_txt:
+                st.markdown(styled, unsafe_allow_html=True)
     else:
         st.info("Click **Show paths** in the sidebar to compute routes.")
 
@@ -166,7 +171,7 @@ with tab_vol:
     # st.subheader(f"Site: {site or '—'}  |  Time: {timestamp:%Y-%m-%d %H:%M}")
     # location dropdown for that site
     arms = sorted(ready_df[ready_df.Site_ID.astype(str)==site].Location.unique()) if site else []
-    loc = st.sidebar.selectbox("Location", arms, key="vol_loc")
+    loc = st.sidebar.selectbox("Locations of start node", arms, key="vol_loc")
     mode = st.sidebar.radio("Models to run", ["Current model","All models"], key="vol_mode")
     if st.sidebar.button("Run Prediction", key="vol_run"):
         pred_params = {
