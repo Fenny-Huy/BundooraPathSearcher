@@ -11,7 +11,7 @@ ids = [
 
 # Generate a random datetime within October 2006
 def random_october_datetime():
-    start = datetime(2006, 10, 1)
+    start = datetime(2006, 10, 2)
     end = datetime(2006, 10, 31, 23, 59, 59)
     delta = end - start
     random_seconds = random.randint(0, int(delta.total_seconds()))
@@ -25,9 +25,9 @@ def generate_and_save_lines(filename="output.txt", n=10):
             id1 = str(random.choice(ids))
             id2 = str(random.choice(ids))
             timestamp = random_october_datetime()
-            last_value = random.randint(1, 6)
+            last_value = random.randint(1, 4)
             line = f'("{id1}", "{id2}", "{timestamp}", {last_value})\n'
             file.write(line)
 
 # Example usage
-generate_and_save_lines("test_cases.txt", 20)  # Generates 20 lines
+generate_and_save_lines("test_cases.txt", 5)  # Generates 20 lines
