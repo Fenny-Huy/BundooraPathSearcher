@@ -1,6 +1,7 @@
 # test_routes.py
 
 import os
+import ast
 from algorithms.graph_builder import build_graph
 from algorithms.astar_search   import astar
 from utils.edge_mapper         import EdgeMapper
@@ -10,6 +11,7 @@ from models.predictor          import LSTMPredictor, GRUPredictor, MLPPredictor,
 
 NODE_CSV   = "data/scats_complete_average.csv"
 VOLUME_PKL = "data/traffic_model_ready.pkl"
+TEST_CASES_FILE = "test_cases.txt"
 
 MODEL_CLASSES = {
     "LSTM": LSTMPredictor,
@@ -25,13 +27,22 @@ MODEL_DIRS = {
     "TCN":  "tcn_saved_models",
 }
 
-# Define test cases: (source, target, timestamp, k_routes)
-TEST_CASES = [
-    ("970", "4030", "2006-10-08 14:45:00", 3),
-    ("3682", "3126", "2006-10-15 08:30:00", 2),
-    ("3804", "4264", "2006-10-20 17:00:00", 4),
-    ("3120", "4057", "2006-10-25 12:15:00", 2),
-]
+# ─── Read Test Cases ─────────────────────────────────────────────────────────────
+
+def load_test_cases(file_path):
+    test_cases = []
+    with open(file_path, "r") as f:
+        for line in f:
+            line = line.strip()
+            if line and not line.startswith("#"):
+                case = ast.literal_eval(line)
+                if isinstance(case, tuple) and len(case) == 4:
+                    test_cases.append(case)
+                else:
+                    print(f"Skipping invalid test case: {line}")
+    return test_cases
+
+TEST_CASES = load_test_cases(TEST_CASES_FILE)
 
 # ─── Setup ──────────────────────────────────────────────────────────────────────
 
@@ -54,7 +65,6 @@ for src, dst, ts, k in TEST_CASES:
         models_dir = MODEL_DIRS[model_name]
         predictor = PredictorCls(data_pkl=VOLUME_PKL, models_dir=models_dir)
         
-        # run A*
         try:
             results = astar(src, dst, centroids, edges, predictor, ts, k=k)
         except Exception as e:
@@ -65,11 +75,10 @@ for src, dst, ts, k in TEST_CASES:
             print("  ❌ No routes found.")
             continue
         
-        # print each route
         for idx, (path, total_time, total_dist) in enumerate(results, start=1):
             print(f"  → Route #{idx}")
             print("    " + " → ".join(path))
             print(f"    Time: {total_time:.1f} min   Distance: {total_dist:.2f} km")
     print("\n" + "-"*60)
 
-print("\nAll tests complete.")
+print("\n✅ All tests complete.")
