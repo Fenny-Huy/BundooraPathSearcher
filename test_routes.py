@@ -84,9 +84,12 @@ for src, dst, ts, k in TEST_CASES:
         
         # print each route
         for idx, (path, total_time, total_dist) in enumerate(results, start=1):
-            print(f"  → Route #{idx}")
-            print("    " + " → ".join(path))
-            print(f"    Time: {total_time:.1f} min   Distance: {total_dist:.2f} km")
+            print(
+                f"  → Route #{idx}: "
+                f"{' → '.join(path)}  |  "
+                f"Time: {total_time:.1f} min  |  "
+                f"Distance: {total_dist:.2f} km"
+            )
         print(f"  ⏱️ Elapsed: {elapsed:.2f}s")
     print("\n" + "-"*60)
 
