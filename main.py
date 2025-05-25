@@ -25,12 +25,12 @@ def main():
                    help='Path to volume pickle')
     args = p.parse_args()
 
-    # 1) Build graph
-    print(f"🔍 Building graph from {args.nodes} …")
+    # 1) Build ggraph
+    print(f"Building graph from {args.nodes} …")
     centroids, edges = build_graph(args.nodes)
 
     # 2) Instantiate mapper & predictor
-    print("🗺️  Initializing edge→arm mapper & LSTM predictor …")
+    print("Initializing edge→arm mapper & LSTM predictor …")
     mapper    = EdgeMapper(args.volumes)
     if args.model.upper() == 'LSTM':
         predictor = LSTMPredictor(data_pkl=args.volumes,
@@ -46,12 +46,12 @@ def main():
                                  models_dir="tcn_saved_models")
 
     # 4) Run A* to get the fastest route under predicted traffic
-    print(f"🚦 Running A* from {args.source} → {args.target} at {args.timestamp} …")
+    print(f"Running A* from {args.source} → {args.target} at {args.timestamp} …")
     #path, total_time = astar(args.source, args.target,centroids, edges, predictor, args.timestamp)
     paths = astar(args.source, args.target,centroids, edges, predictor, args.timestamp, k=3)
 
     if not paths:
-        print("❌ No route found.")
+        print("No route found.")
         return
 
     # # 5) Compute total distance
@@ -65,10 +65,10 @@ def main():
     i = 0
     for path in paths:
         i+= 1
-        print(f"\n🛣️ Optimal route {i}:")
+        print(f"\nOptimal route {i}:")
         print("   " + " → ".join(path[0]))
-        print(f"\n📏 Total distance: {path[2]:.2f} km")
-        print(f"⏱️ Total travel time: {path[1]:.1f} minutes")
+        print(f"\nTotal distance: {path[2]:.2f} km")
+        print(f"Total travel time: {path[1]:.1f} minutes")
 
 if __name__ == "__main__":
     main()
