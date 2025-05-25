@@ -2,6 +2,7 @@
 
 import os
 import ast
+import time
 from algorithms.graph_builder import build_graph
 from algorithms.astar_search   import astar
 from utils.edge_mapper         import EdgeMapper
@@ -33,7 +34,7 @@ def load_test_cases(file_path):
     test_cases = []
     with open(file_path, "r") as f:
         for line in f:
-            line = line.strip()
+            line = line.strip().rstrip(",")        # strip trailing commas
             if line and not line.startswith("#"):
                 case = ast.literal_eval(line)
                 if isinstance(case, tuple) and len(case) == 4:
@@ -65,20 +66,28 @@ for src, dst, ts, k in TEST_CASES:
         models_dir = MODEL_DIRS[model_name]
         predictor = PredictorCls(data_pkl=VOLUME_PKL, models_dir=models_dir)
         
+        # time the A* call
+        start = time.perf_counter()
         try:
             results = astar(src, dst, centroids, edges, predictor, ts, k=k)
         except Exception as e:
+            elapsed = time.perf_counter() - start
             print(f"  ❌ Error: {e}")
+            print(f"  ⏱️ Elapsed: {elapsed:.2f}s")
             continue
+        elapsed = time.perf_counter() - start
         
         if not results:
             print("  ❌ No routes found.")
+            print(f"  ⏱️ Elapsed: {elapsed:.2f}s")
             continue
         
+        # print each route
         for idx, (path, total_time, total_dist) in enumerate(results, start=1):
             print(f"  → Route #{idx}")
             print("    " + " → ".join(path))
             print(f"    Time: {total_time:.1f} min   Distance: {total_dist:.2f} km")
+        print(f"  ⏱️ Elapsed: {elapsed:.2f}s")
     print("\n" + "-"*60)
 
 print("\n✅ All tests complete.")
